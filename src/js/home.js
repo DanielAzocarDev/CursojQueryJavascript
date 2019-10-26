@@ -94,16 +94,22 @@ Promise.race([
         </div>
         <h4 class="primaryPlaylistItem-title">
           ${movie.title}
-        </h4>
+          </h4>
       </div>
       `
     )    
   };
-
+  
   const createTemplate = (HTMLString) => {
     const html = document.implementation.createHTMLDocument();
     html.body.innerHTML = HTMLString
     return html.body.children[0];
+  };
+
+  const addEventClick = (el)  => {
+    el.addEventListener('click', () => {
+      alert('click');
+    });
   };
 
   const renderMovieList = (list, $container) => {
@@ -113,9 +119,17 @@ Promise.race([
       const HTMLToString = videoItemTemplate(movie);
       const movieElement = createTemplate(HTMLToString);
       $container.append(movieElement);
+
+      addEventClick(movieElement);
     });
   };
 
+  const $form = document.getElementById('form');
+  $form.addEventListener('submit', (ev) => {
+    ev.preventDefault();
+    
+  });
+  
   const $actionContainer = document.getElementById('action');
   renderMovieList(actionList.data.movies, $actionContainer);
 
@@ -126,7 +140,6 @@ Promise.race([
   renderMovieList(animationList.data.movies, $animationContainer);
   
   const $featuringContainer = document.getElementById('featuring');
-  const $form = document.getElementById('form');
   const $home = document.getElementById('home');
 
   const $modal = document.getElementById('modal');
