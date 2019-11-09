@@ -77,13 +77,15 @@ Promise.race([
   const getData = async (url) => {
     const response = await fetch(url);
     const data = await response.json();
-    return data;
+    if (data.data.movie_count > 0){
+      return data;
+    }
+    throw new Error('No se encontró ningun resultado');
+
   };
 
-  const { data: {movies: actionList}} = await getData(`${API}list_movies.json?genre=action`);
-  const { data:{ movies: dramaList}} = await getData(`${API}list_movies.json?genre=drama`);
-  const {data: {movies: animationList}} = await getData(`${API}list_movies.json?genre=animation`);
-  console.log(actionList, dramaList, animationList);
+
+  // console.log(actionList, dramaList, animationList);
 
   const videoItemTemplate = (movie, category) => {
     return(
@@ -120,10 +122,26 @@ Promise.race([
       const HTMLToString = videoItemTemplate(movie, category);
       const movieElement = createTemplate(HTMLToString);
       $container.append(movieElement);
+      const image = movieElement.querySelector('img');
+      image.addEventListener('load', (event) => {
+        event.srcElement.classList.add('fadeIn');        
+      });
 
       addEventClick(movieElement);
     });
   };
+
+  const { data: {movies: actionList}} = await getData(`${API}list_movies.json?genre=action`);
+  const $actionContainer = document.getElementById('action');
+  renderMovieList(actionList, $actionContainer, 'action');
+
+  const { data:{ movies: dramaList}} = await getData(`${API}list_movies.json?genre=drama`);
+  const $dramaContainer = document.getElementById('drama');
+  renderMovieList(dramaList, $dramaContainer, 'drama');
+
+  const {data: {movies: animationList}} = await getData(`${API}list_movies.json?genre=animation`);
+  const $animationContainer = document.getElementById('animation');
+  renderMovieList(animationList, $animationContainer, 'animation');
 
   const $home = document.getElementById('home');
 
@@ -163,22 +181,19 @@ Promise.race([
     $featuringContainer.append($loader);
 
     const data = new FormData($form);
-    const {data: {movies: pelis}} = await getData(`${API}list_movies.json?limite=1&query_term=${data.get('name')}`)
+    try {
+      const {data: {movies: pelis}} = await getData(`${API}list_movies.json?limite=1&query_term=${data.get('name')}`)
 
-    const HTMLString = featuringTemplate(pelis[0]);
-    $featuringContainer.innerHTML = HTMLString;
-    
+      const HTMLString = featuringTemplate(pelis[0]);
+      $featuringContainer.innerHTML = HTMLString;
+    } catch (error) {
+      alert(error.message);
+      $loader.remove();
+      $home.classList.remove('search-active');
+    }
+        
   });
-  
-  const $actionContainer = document.getElementById('action');
-  renderMovieList(actionList, $actionContainer, 'action');
-
-  const $dramaContainer = document.getElementById('drama');
-  renderMovieList(dramaList, $dramaContainer, 'drama');
-
-  const $animationContainer = document.getElementById('animation');
-  renderMovieList(animationList, $animationContainer, 'animation');
-  
+    
 
   const $modal = document.getElementById('modal');
   const $overlay = document.getElementById('overlay');
