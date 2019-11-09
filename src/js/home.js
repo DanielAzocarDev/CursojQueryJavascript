@@ -80,9 +80,9 @@ Promise.race([
     return data;
   };
 
-  const actionList = await getData(`${API}list_movies.json?genre=action`);
-  const dramaList = await getData(`${API}list_movies.json?genre=drama`);
-  const animationList = await getData(`${API}list_movies.json?genre=animation`);
+  const { data: {movies: actionList}} = await getData(`${API}list_movies.json?genre=action`);
+  const { data:{ movies: dramaList}} = await getData(`${API}list_movies.json?genre=drama`);
+  const {data: {movies: animationList}} = await getData(`${API}list_movies.json?genre=animation`);
   console.log(actionList, dramaList, animationList);
 
   const videoItemTemplate = (movie, category) => {
@@ -113,7 +113,7 @@ Promise.race([
     });
   };
 
-  const renderMovieList = (list, $container) => {
+  const renderMovieList = (list, $container, category) => {
     // actionList.data.movies es el parametro liste que se le pasa a la funcion
     $container.children[0].remove();
     list.forEach((movie) => {
@@ -171,13 +171,13 @@ Promise.race([
   });
   
   const $actionContainer = document.getElementById('action');
-  renderMovieList(actionList.data.movies, $actionContainer, 'action');
+  renderMovieList(actionList, $actionContainer, 'action');
 
   const $dramaContainer = document.getElementById('drama');
-  renderMovieList(dramaList.data.movies, $dramaContainer, 'drama');
+  renderMovieList(dramaList, $dramaContainer, 'drama');
 
   const $animationContainer = document.getElementById('animation');
-  renderMovieList(animationList.data.movies, $animationContainer, 'animation');
+  renderMovieList(animationList, $animationContainer, 'animation');
   
 
   const $modal = document.getElementById('modal');
@@ -188,10 +188,33 @@ Promise.race([
   const $modalImage = $modal.querySelector('img');
   const $modalIDescription = $modal.querySelector('p');
 
+  const findById = (list, id) => {
+    return list.find(movie =>  movie.id == parseInt(id, 10))
+  }
+
+  const findMovie = (id, category) => {
+    switch (category) {
+      case 'action':
+        return findById(actionList, id);
+      case 'drama':
+        return findById(dramaList, id);
+    
+      default:
+        return findById(animationList, id);
+    }
+    
+  }
   const showModal = (el) => {
     $overlay.classList.add('active');
     $modal.style.animation ='modalIn .8s forwards';
+    const id = el.dataset.id;
+    const category = el.dataset.category;
 
+    const pelicula = findMovie(id, category);
+
+    $modalTitle.textContent = pelicula.title;
+    $modalImage.setAttribute('src', pelicula.medium_cover_image);
+    $modalIDescription.textContent = pelicula.description_full;
   }
 
   const hideModal = () => {
